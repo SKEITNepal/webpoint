@@ -2,6 +2,24 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 ## Getting Started
 
+## System Requirement 
+node: v16.17.0
+
+Install packeges: 
+```bash
+npm i
+# or
+yarn install
+```
+
+Initialize the dabatase, for first time use: 
+```bash
+npm run db
+# or
+yarn db
+```
+
+
 First, run the development server:
 
 ```bash
