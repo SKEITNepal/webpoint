@@ -43,19 +43,21 @@ export default function Home() {
 
   let journals = [];
   let count = 0;
+
+  const fetcher = (query) => fetch('http://localhost:3000/api/graphql', {
+    method: 'POST',
+    headers: {
+      'Content-type': 'application/json',
+    },
+    body: JSON.stringify({ query }),
+  }).then((res) => res.json())
+  .then((json) => json.data);
+
+
   try{
     //setLoading(true);
     useEffect(()=>{setLoading(true)},[])
-    const fetcher = (query) => fetch('http://localhost:3000/api/graphql', {
-          method: 'POST',
-          headers: {
-            'Content-type': 'application/json',
-          },
-          body: JSON.stringify({ query }),
-        }).then((res) => res.json())
-        .then((json) => json.data);
 
-    
     const { data, read_error } = useSWR(`query{count, journals(limit: ${defaultItems}, skip: ${(page - 1)*defaultItems}){id,title,desc,date}}`, fetcher)
 
     journals = data.journals;
@@ -91,21 +93,43 @@ export default function Home() {
   //create form
   const [validated, setValidated] = useState(false);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     const form = event.currentTarget;
     if (form.checkValidity() === false) {
       event.preventDefault();
       event.stopPropagation();
     }
 
-    setValidated(true);
-  };
+    // setValidated(true);
+    // if(!!form[0].value && !!form[1].value && !!form[2].value){
+    //   setValidated(true);
+    // }
+    event.preventDefault();
 
-  const handleDateChange = (date, event) => {
-    setFormData({
-        date: date
-    });
-};
+    if(form.checkValidity()){
+      const title = form[0]?.value;
+      const desc = form[1]?.value;
+      const date = new Date(form[2]?.value).toISOString();
+      
+      setLoading(true);
+      
+      const create_return = await fetcher(`mutation{ 
+        postJournal(title: "${title}", desc: "${desc}", date: "${date}"){
+        id, title, desc, date }}`);
+      
+      setLoading(false);
+      if(create_return?.postJournal?.id){
+        form.reset();
+        event.stopPropagation();
+        // return null;
+      }
+    }
+
+    
+
+    
+
+  };
 
 
   return (
@@ -122,15 +146,14 @@ export default function Home() {
           Create new Journal: 
         </h1>
         <div className={styles.form}>
-        <Form noValidate validated={validated} onSubmit={handleSubmit} style={{width: '100%'}}>
+        <Form noValidate validated={validated} onSubmit={handleSubmit} style={{width: '100%'}} >
         <Row className="mb-3">
           <Form.Group as={Col} md="8" controlId="validationCustom01">
-          <FloatingLabel controlId='date' label="Title">
+          <FloatingLabel controlId='title' label="Title">
             <Form.Control
               required
               type="text"
               placeholder="First name"
-              defaultValue="Mark"
             />
             <Form.Control.Feedback type='invalid'>Title Can not be empty</Form.Control.Feedback>
             </FloatingLabel>
@@ -138,12 +161,11 @@ export default function Home() {
         </Row>
         <Row className="mb-3">
           <Form.Group as={Col} md="8" controlId="validationCustom02">
-          <FloatingLabel controlId='date' label="Description">
+          <FloatingLabel controlId='desc' label="Description">
             <Form.Control
               required
               type="text"
               placeholder="Last name"
-              defaultValue="Otto"
               as="textarea"
             />
             <Form.Control.Feedback type='invalid'>Description can not be empty!!</Form.Control.Feedback>
@@ -154,13 +176,12 @@ export default function Home() {
           <Form.Group as={Col} md="8" controlId="validationCustom03">
             <FloatingLabel controlId='date' label="Date">
             <Form.Control
+                required
                 type="date"
                 name="datepic"
                 placeholder="DateRange"
-                onChange={handleDateChange}
-                selected={formData.date}
             />
-            <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
+            <Form.Control.Feedback type='invalid'>Date Can not be empty!</Form.Control.Feedback>
             </FloatingLabel>
           </Form.Group>
         </Row>
