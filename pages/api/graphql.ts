@@ -8,10 +8,16 @@ import { context } from '../../prisma/context_new'
 
 const resolvers = {
   Query: {
-    journals: async (parent: unknown, args: {filter?:string, skip?: number; limit?: number}, context: Context) =>
+    journals: async (parent: unknown, args: {start?:string, end?: string, skip?: number; limit?: number}, context: Context) =>
       await context.prisma.journal.findMany({
         take: args.limit,
-        skip: args.skip
+        skip: args.skip,
+        where:{
+          date: {
+            gte: new Date(args.start),
+            lte: new Date(args.end)
+          }
+        }
       }),
 
     count: async (parent: unknown, args: {}, context: Context) =>
@@ -44,7 +50,7 @@ const resolvers = {
 const typeDefs = `
 scalar Date
 type Query {
-  journals(filter: String, limit:Int, skip: Int): [Journal!]!
+  journals(start: String, end:String, limit:Int, skip: Int): [Journal!]!
   count: Int
 }
 type Journal {
