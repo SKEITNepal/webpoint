@@ -1,0 +1,15 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Journal {
+  id        Int   @id @default(autoincrement()) @db.Int()
+  title     String   @default("") @db.VarChar(255)
+  date      DateTime @default(now()) @db.DateTime(0)
+  desc      String   @default("") @db.LongText
+}
