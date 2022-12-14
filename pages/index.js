@@ -1,14 +1,11 @@
 import Head from 'next/head'
-import Image from 'next/image'
 import styles from '../styles/Home.module.css'
-import React, { useRef, useState, useEffect } from 'react';
-import useSWR from 'swr'
-
+import React, { useState, useEffect } from 'react';
 
 import Button from 'react-bootstrap/Button';
 import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
-import InputGroup from 'react-bootstrap/InputGroup';
+
 import FloatingLabel from 'react-bootstrap/FloatingLabel';
 import Row from 'react-bootstrap/Row';
 
@@ -38,11 +35,11 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
 
   //filter states
-  const [startDate, setStartDate] = useState(false);
-  const [endDate, setEndDate] = useState(false);
+  const [startDate, setStartDate] = useState(new Date().toISOString());
+  const [endDate, setEndDate] = useState(new Date().toISOString());
 
-  let journals = [];
-  let count = 0;
+  const [journals, setJournals] = useState([]);
+  const [count, setCount] = useState(0);
 
   const fetcher = (query) => fetch('http://localhost:3000/api/graphql', {
     method: 'POST',
@@ -54,41 +51,52 @@ export default function Home() {
   .then((json) => json.data);
 
 
-  try{
-    //setLoading(true);
-    useEffect(()=>{setLoading(true)},[])
+  //get starting data
+  useEffect(()=>{
+    async function fetchData() {
+      const response = await fetcher(`query{count, start{date}, end{date}, journals(limit: ${defaultItems}, skip: ${(page - 1)*defaultItems}){id,title,desc,date}}`);
+      
+      if(Array.isArray(response.journals)) setJournals(response.journals);
+      if(response.journals) setCount(response.count);
 
-    const { data, read_error } = useSWR(`query{count, journals(limit: ${defaultItems}, skip: ${(page - 1)*defaultItems}){id,title,desc,date}}`, fetcher)
-
-    journals = data.journals;
-    count = data.count;
-
-    useEffect(()=>{if(journals.length) setLoading(false)},[data])
-
-    if(!!read_error) new Error(read_error);
-
-    } catch (e) {
-      useEffect(()=>{
-        setError({
-          ...defaultError,
-          error: true,
-          code: e.code,
-          message: e.message
-      });
-        setLoading(false)
-      },[e])
+      if(isValidDate(response?.start?.date)) setStartDate(getFormattedDate(response.start.date));
+      if(isValidDate(response?.end?.date)) setEndDate(getFormattedDate(response.end.date));
     }
+    fetchData();
+  }, [page]);
 
-    console.log({loading});
+
+  //handle filter
+  const handleFilter = async (event) => {
+
+    event.preventDefault();
+
+    if(isValidDate(startDate) && isValidDate(endDate)){
+      const filter_res = await fetcher(`query{count, start{date}, end{date}, filter(start: "${startDate}", end: "${endDate}"limit: ${defaultItems}, skip: ${(page - 1)*defaultItems}){id,title,desc,date}}`);
+      
+      if(Array.isArray(filter_res.filter)) {
+        setJournals(filter_res.filter);
+        setCount(filter_res.filter.length);
+      }else{
+        setJournals([]);
+        setCount([]);
+      }
+
+      // if(isValidDate(response?.start?.date)) setStartDate(getFormattedDate(response.start.date));
+      // if(isValidDate(response?.end?.date)) setEndDate(getFormattedDate(response.end.date));
+      
+      console.log(filter_res);
+    }
+  };
 
 
 
   const getFormattedDate = (date) =>{
     const f_date = new Date(date);
-    return f_date.getFullYear() + '-' + f_date.getMonth()+'-'+f_date.getDate()
+    return f_date.getFullYear() + '-' +  (f_date.getMonth() + 1).toString().padStart(2, "0") +'-'+f_date.getDate().toString().padStart(2, "0");
   }
 
-
+  const isValidDate = (date) => new Date(date).toString() !== 'Invalid Date'
 
   //create form
   const [validated, setValidated] = useState(false);
@@ -100,10 +108,6 @@ export default function Home() {
       event.stopPropagation();
     }
 
-    // setValidated(true);
-    // if(!!form[0].value && !!form[1].value && !!form[2].value){
-    //   setValidated(true);
-    // }
     event.preventDefault();
 
     if(form.checkValidity()){
@@ -121,14 +125,8 @@ export default function Home() {
       if(create_return?.postJournal?.id){
         form.reset();
         event.stopPropagation();
-        // return null;
       }
     }
-
-    
-
-    
-
   };
 
 
@@ -194,8 +192,18 @@ export default function Home() {
         <h1 className={styles.title}>
           Journals: 
         </h1>
+        <div className={styles.filter}>
+          <div className={styles.start}>
+            <span>Starting Date: </span>
+            <input type='date' defaultValue={getFormattedDate(startDate)} onChange={(e)=>setStartDate(e.target.value)}/>
+          </div>
+          <div className={styles.start}>
+            <span>End Date: </span>
+            <input type='date' defaultValue={getFormattedDate(endDate)} onChange={(e)=>setStartDate(e.target.value)}/>
+          </div>
+          <Button onClick={handleFilter}>Filter</Button>
+        </div>
         <div className={styles.grid}>
-          
           {journals.length > 0 && !loading && journals.map(journal =>{
             return <a
                   href="#"
@@ -212,7 +220,7 @@ export default function Home() {
         </div>
       </main>
       <div className={styles.pagination}>
-          { Array(parseInt(count / defaultItems) + 1).fill().map((page , index)=>{
+          { count > 0 && Array(parseInt(count / defaultItems) + 1).fill().map((page , index)=>{
             return <button value={index+1} key={index+1} onClick={()=>{setPage(index+1)}} focus={index + 1 === page ? "true" : undefined} disabled={index + 1 === page }>{index+1}</button>
           })
           }

@@ -91,6 +91,18 @@
   /* width: 100%; */
   flex-direction: column;
 }
+.filter{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 90%;
+  align-items: center;
+  flex-direction: row;
+}
+.start{
+  margin: 10px;
+}
 
 .card {
   margin: 5px;

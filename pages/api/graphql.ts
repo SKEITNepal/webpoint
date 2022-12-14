@@ -27,9 +27,9 @@ const resolvers = {
     count: async (parent: unknown, args: {}, context: Context) =>
       await context.prisma.journal.count(),
     start: async (parent: unknown, args: {}, context: Context) =>
-      await context.prisma.journal.findFirst({ orderBy: [{ date: 'desc' }] }),
-    end: async (parent: unknown, args: {}, context: Context) =>
       await context.prisma.journal.findFirst({ orderBy: [{ date: 'asc' }] }),
+    end: async (parent: unknown, args: {}, context: Context) =>
+      await context.prisma.journal.findFirst({ orderBy: [{ date: 'desc' }] }),
   },
 
   Journal: {
