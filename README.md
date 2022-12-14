@@ -16,7 +16,7 @@ yarn install
 
 please put the mysql database link in following format: 
 
-``bash
+```bash
 DATABASE_URL="mysql://DATABSE_USERNAME:DATABASE_PASSWORD@DATABASE_HOST:DATABASE_PORT/DATABASE_NAME"
 ```
 
