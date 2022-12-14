@@ -14,7 +14,7 @@ yarn install
 
 ## Initialize the dabatase, for first time use: 
 
-please put the mysql database link in following format: 
+please put the mysql database link on ```.env``` file in following format: 
 
 ```bash
 DATABASE_URL="mysql://DATABSE_USERNAME:DATABASE_PASSWORD@DATABASE_HOST:DATABASE_PORT/DATABASE_NAME"

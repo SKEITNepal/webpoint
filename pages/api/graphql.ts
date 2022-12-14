@@ -1,6 +1,6 @@
 import { createYoga, createSchema } from 'graphql-yoga'
 import { makeExecutableSchema } from '@graphql-tools/schema'
-import type { journal } from '@prisma/client'
+import type { Journal } from '@prisma/client'
 import { Context } from '../../prisma/context_new'
 import { context } from '../../prisma/context_new'
 
@@ -18,11 +18,11 @@ const resolvers = {
       await context.prisma.journal.count()
   },
 
-  journal: {
-    id: (parent: journal) => parent.id,
-    title: (parent: journal) => parent.title,
-    desc: (parent: journal) => parent.desc,
-    date: (parent: journal) => parent.date
+  Journal: {
+    id: (parent: Journal) => parent.id,
+    title: (parent: Journal) => parent.title,
+    desc: (parent: Journal) => parent.desc,
+    date: (parent: Journal) => parent.date
   },
   Mutation: {
     async postJournal(
@@ -44,10 +44,10 @@ const resolvers = {
 const typeDefs = `
 scalar Date
 type Query {
-  journals(filter: String, limit:Int, skip: Int): [journal!]!
+  journals(filter: String, limit:Int, skip: Int): [Journal!]!
   count: Int
 }
-type journal {
+type Journal {
    id: Int
    title: String
    desc: String
@@ -55,7 +55,7 @@ type journal {
  }
 
  type Mutation {
-  postJournal(title: String!, date: Date!, desc: String!): journal!
+  postJournal(title: String!, date: Date!, desc: String!): Journal!
   }
 `
 
